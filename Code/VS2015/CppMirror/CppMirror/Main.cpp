@@ -6,7 +6,67 @@
 #include <boost/mpl/range_c.hpp>
 #include <boost/mpl/for_each.hpp>
 #include <boost/bind.hpp>
+#include <boost/mpl/string.hpp>  
+#include <boost/functional/hash.hpp>
 #include <iostream>
+
+#include <boost/mpl/string.hpp>
+#include <boost/mpl/fold.hpp>
+#include <boost/mpl/size_t.hpp>
+
+using namespace boost;
+
+namespace meta
+{
+#pragma warning(push)
+	// disable addition overflow warning
+#pragma warning(disable:4307)
+
+	template <typename Seed, typename Value>
+	struct hash_combine
+	{
+		typedef mpl::size_t<
+			Seed::value ^ (static_cast<std::size_t>(Value::value)
+				+ 0x9e3779b9 + (Seed::value << 6) + (Seed::value >> 2))
+		> type;
+	};
+
+#pragma warning(pop)
+
+	// Hash any sequence of integral wrapper types
+	template <typename Sequence>
+	struct hash_sequence
+		: mpl::fold<
+		Sequence
+		, mpl::size_t<0>
+		, hash_combine<mpl::_1, mpl::_2>
+		>::type
+	{};
+
+	// For hashing std::strings et al that don't include the zero-terminator
+	template <typename String>
+	struct hash_string
+		: hash_sequence<String>
+	{};
+
+	// Hash including terminating zero for char arrays
+	template <typename String>
+	struct hash_cstring
+		: hash_combine<
+		hash_sequence<String>
+		, mpl::size_t<0>
+		>::type
+	{};
+
+} // namespace meta
+
+#define DEFINE_MAGIC_TYPE(x)
+template <typename T>
+{
+
+}
+
+#define GET_TYPE_INDEX(x) 
 
 #define REM(...) __VA_ARGS__
 #define EAT(...)
@@ -135,23 +195,75 @@ void print_fields(T & x)
 	visit_each(x, print_visitor());
 }
 
+struct magicVar{
+	union {
+		int intV;
+		float floatV;
+		double doubleV;
+		std::string stringV;
+	} value;
+	
+	enum type
+	{
+		int_ = 0,
+		float_ = 1,
+		double_ = 2,
+		string_ = 3,
+	} type;
+};
+
+void printVar(magicVar var)
+{
+	switch (var.type)
+	{
+	case magicVar::int_:
+		std::cout << var.value.intV << std::endl;
+	case magicVar::float_:
+		std::cout << var.value.floatV << std::endl;
+	case magicVar::double_:
+		std::cout << var.value.doubleV << std::endl;
+	case magicVar::string_:
+		std::cout << var.value.stringV << std::endl;
+	default:
+		std::cout << "Error!" << std::endl;
+		break;
+	}
+}
+
 class TestObj {
 public:
 	const char* mProp0;
 	int mProp1;
 
-	template<class Self, class T>
-	struct _GetAttr{
-		Self &self;
-		_GetAttr(Self & self) : self(self) {} 
-		T operator()(const char* propName)
+	int FindAttrIndex(const char* propName)
+	{
+		return 0;
+	}
+
+	magicVar GetAttr(const char* propName) {
+		int index = this->FindAttrIndex(propName);
+		magicVar mv;
+		switch (index)
 		{
-			return self.GetProp0();
+		case 0:
+			mv.value. = self.mProp0
+			break;
+		}
+	}
+
+	template <class Self, class T>
+	struct _SetAttr
+	{
+		Self &self;
+		_SetAttr(Self &self) : self(self) {}
+		void operator()(const char* propName, T)
+		{
+			return;
 		}
 	};
 
-	typename _GetAttr<TestObj, const char*> GetAttr;
-	TestObj(const char* prop0, int prop1) :mProp0(prop0), mProp1(prop1), GetAttr(*this){}
+	typename _GetAttr<TestObj*const, const char*> GetAttr;
+	TestObj(const char* prop0, int prop1) :mProp0(prop0), mProp1(prop1), GetAttr(this){}
 
 private:
 
@@ -165,7 +277,11 @@ int main() {
 	auto obj = new TestObj("stringProp", 110);
 	auto a = (obj->GetAttr("mProp0"));
 	std::cout<< a << std::endl;
+
 	//obj->SetAttr("mProp1", 1);
 	//std::count << obj->GetAttr("mProp1") << std::endl;
+	//std::cout << boost::hash_value("mProp1") << std::endl;
+	boost::hash<const char*> func;
+	//std::cout << meta::hash_cstring<mpl::c_str<"mProp1">::value>::value << std::endl;
 	return 0;
 }
