@@ -60,25 +60,6 @@ namespace meta
 
 } // namespace meta
 
-template<class T>
-struct MagicTypeIndex
-{
-	static const int index = -1;
-};
-
-
-#define DEFINE_MAGIC_TYPE(x, i) \
-template <>	\
-struct MagicTypeIndex<x>	\
-{						\
-	static const int index = i;	\
-};
-
-DEFINE_MAGIC_TYPE(int, 0)
-DEFINE_MAGIC_TYPE(float, 1)
-DEFINE_MAGIC_TYPE(double, 2)
-DEFINE_MAGIC_TYPE(std::string, 3)
-
 #define REM(...) __VA_ARGS__
 #define EAT(...)
 
@@ -206,6 +187,21 @@ void print_fields(T & x)
 	visit_each(x, print_visitor());
 }
 
+template<class T>
+struct MagicTypeIndex {};
+
+#define DEFINE_MAGIC_TYPE(x, i) \
+template <>	\
+struct MagicTypeIndex<x>	\
+{						\
+	static const int index = i;	\
+};
+
+DEFINE_MAGIC_TYPE(int, 0)
+DEFINE_MAGIC_TYPE(float, 1)
+DEFINE_MAGIC_TYPE(double, 2)
+DEFINE_MAGIC_TYPE(std::string, 3)
+
 struct magicVar{
 	union {
 		int intV;
@@ -243,9 +239,16 @@ void printVar(magicVar var)
 
 class TestObj {
 public:
-	const char* mProp0;
+	std::string mProp0;
 	int mProp1;
-	
+
+#define _index4mProp0 0
+#define _index4mProp1 1
+#define _name4mProp0 mProp0
+#define _name4mProp1 mProp1
+#define _type4mProp0 std::string
+#define _type4mProp1 int
+
 	//Auto Gen
 	static const char* const _index[];
 
@@ -260,11 +263,61 @@ public:
 		return -1;
 	}
 
+	template<class Self, int, class T1>
+	struct _GetAttr
+	{
+		T1 operator()(){}
+	};
+
+	template <class T>
+	magicVar Transform(const T var) 
+	{
+		return magicVar();
+	};
+
+	template <>
+	magicVar Transform<const char*>(const char* var)
+	{
+		magicVar mv;
+		mv.type = mv.string_;
+		mv.value.stringV = new std::string(var);
+		return mv;
+	}
+
+
+	template<class Self>
+	struct _GetAttr<Self,_index4mProp0, _type4mProp0>
+	{
+		_GetAttr(Self * const self):self(self){}
+		Self * const self;
+		_type4mProp0 operator()() {
+			return self->_name4mProp0;
+		}
+	};
+
 	//Auto Gen
 	magicVar GetAttr(const char* propName) {
 		int index = this->FindAttrIndex(propName);
 		magicVar mv;
+		switch (index)
+		{
+		case _index4mProp0:
+			//_GetAttr<TestObj, _index4mProp0, _type4mProp0> GetAttr(this);
+			mv = Transform(this->_name4mProp0);
+			break;
+		}
 		return mv;
+	}
+
+	template<class T>
+	void SetAttr(const char* propName, T var) {
+		int index = this->FindAttrIndex(propName);
+		switch (index)
+		{
+		case _index4mProp0:
+			this->_name4mProp0 = var;
+			break;
+		}
 	}
 
 	template <class Self, class T>
@@ -282,8 +335,6 @@ public:
 
 private:
 
-	const char* GetProp0() { return mProp0; }
-	int GetProp1() { return mProp1; }
 };
 
 const char* const TestObj::_index[] = { "mProp0", "mProp1","mProp3"};
@@ -292,7 +343,7 @@ int main() {
 	//Person p("Tom", 82);
 	//print_fields(p);
 	auto obj = new TestObj("stringProp", 110);
-	std::cout<<obj->FindAttrIndex("mProp3");
+	std::cout << obj->mProp0;;//*obj->GetAttr("mProp0").value.stringV;
 	//obj->SetAttr("mProp1", 1);
 	//std::count << obj->GetAttr("mProp1") << std::endl;
 	//std::cout << boost::hash_value("mProp1") << std::endl;
