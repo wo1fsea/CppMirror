@@ -60,13 +60,24 @@ namespace meta
 
 } // namespace meta
 
-#define DEFINE_MAGIC_TYPE(x)
-template <typename T>
+template<class T>
+struct MagicTypeIndex
 {
+	static const int index = -1;
+};
 
-}
 
-#define GET_TYPE_INDEX(x) 
+#define DEFINE_MAGIC_TYPE(x, i) \
+template <>	\
+struct MagicTypeIndex<x>	\
+{						\
+	static const int index = i;	\
+};
+
+DEFINE_MAGIC_TYPE(int, 0)
+DEFINE_MAGIC_TYPE(float, 1)
+DEFINE_MAGIC_TYPE(double, 2)
+DEFINE_MAGIC_TYPE(std::string, 3)
 
 #define REM(...) __VA_ARGS__
 #define EAT(...)
@@ -200,15 +211,15 @@ struct magicVar{
 		int intV;
 		float floatV;
 		double doubleV;
-		std::string stringV;
+		std::string* stringV;
 	} value;
 	
 	enum type
 	{
-		int_ = 0,
-		float_ = 1,
-		double_ = 2,
-		string_ = 3,
+		int_ = MagicTypeIndex<int>::index,
+		float_ = MagicTypeIndex<float>::index,
+		double_ = MagicTypeIndex<double>::index,
+		string_ = MagicTypeIndex<std::string>::index,
 	} type;
 };
 
@@ -234,21 +245,26 @@ class TestObj {
 public:
 	const char* mProp0;
 	int mProp1;
+	
+	//Auto Gen
+	static const char* const _index[];
 
+	//Auto Gen
 	int FindAttrIndex(const char* propName)
 	{
-		return 0;
+		for (int i = 0; i < sizeof(*_index); i++)
+		{
+			if (_index[i] == propName)
+				return i;
+		}
+		return -1;
 	}
 
+	//Auto Gen
 	magicVar GetAttr(const char* propName) {
 		int index = this->FindAttrIndex(propName);
 		magicVar mv;
-		switch (index)
-		{
-		case 0:
-			mv.value. = self.mProp0
-			break;
-		}
+		return mv;
 	}
 
 	template <class Self, class T>
@@ -262,8 +278,7 @@ public:
 		}
 	};
 
-	typename _GetAttr<TestObj*const, const char*> GetAttr;
-	TestObj(const char* prop0, int prop1) :mProp0(prop0), mProp1(prop1), GetAttr(this){}
+	TestObj(const char* prop0, int prop1) :mProp0(prop0), mProp1(prop1){}
 
 private:
 
@@ -271,17 +286,18 @@ private:
 	int GetProp1() { return mProp1; }
 };
 
+const char* const TestObj::_index[] = { "mProp0", "mProp1","mProp3"};
+
 int main() {
 	//Person p("Tom", 82);
 	//print_fields(p);
 	auto obj = new TestObj("stringProp", 110);
-	auto a = (obj->GetAttr("mProp0"));
-	std::cout<< a << std::endl;
-
+	std::cout<<obj->FindAttrIndex("mProp3");
 	//obj->SetAttr("mProp1", 1);
 	//std::count << obj->GetAttr("mProp1") << std::endl;
 	//std::cout << boost::hash_value("mProp1") << std::endl;
 	boost::hash<const char*> func;
 	//std::cout << meta::hash_cstring<mpl::c_str<"mProp1">::value>::value << std::endl;
 	return 0;
+
 }
