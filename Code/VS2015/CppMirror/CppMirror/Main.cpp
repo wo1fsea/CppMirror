@@ -14,51 +14,6 @@
 #include <boost/mpl/fold.hpp>
 #include <boost/mpl/size_t.hpp>
 
-using namespace boost;
-
-namespace meta
-{
-#pragma warning(push)
-	// disable addition overflow warning
-#pragma warning(disable:4307)
-
-	template <typename Seed, typename Value>
-	struct hash_combine
-	{
-		typedef mpl::size_t<
-			Seed::value ^ (static_cast<std::size_t>(Value::value)
-				+ 0x9e3779b9 + (Seed::value << 6) + (Seed::value >> 2))
-		> type;
-	};
-
-#pragma warning(pop)
-
-	// Hash any sequence of integral wrapper types
-	template <typename Sequence>
-	struct hash_sequence
-		: mpl::fold<
-		Sequence
-		, mpl::size_t<0>
-		, hash_combine<mpl::_1, mpl::_2>
-		>::type
-	{};
-
-	// For hashing std::strings et al that don't include the zero-terminator
-	template <typename String>
-	struct hash_string
-		: hash_sequence<String>
-	{};
-
-	// Hash including terminating zero for char arrays
-	template <typename String>
-	struct hash_cstring
-		: hash_combine<
-		hash_sequence<String>
-		, mpl::size_t<0>
-		>::type
-	{};
-
-} // namespace meta
 
 #define REM(...) __VA_ARGS__
 #define EAT(...)
@@ -91,101 +46,50 @@ struct make_const<const M, T>
 
 
 #define REFLECTABLE(...) \
-static const int fields_n = BOOST_PP_VARIADIC_SIZE(__VA_ARGS__); \
+static const int _lenIndex = BOOST_PP_VARIADIC_SIZE(__VA_ARGS__); \
 friend struct reflector; \
 template<int N, class Self> \
 struct field_data {}; \
-BOOST_PP_SEQ_FOR_EACH_I(REFLECT_EACH, data, BOOST_PP_VARIADIC_TO_SEQ(__VA_ARGS__))
+BOOST_PP_SEQ_FOR_EACH_I(REFLECT_EACH, data, BOOST_PP_VARIADIC_TO_SEQ(__VA_ARGS__))	\
+static const char* const _index[]; \
+int FindAttrIndex(const char* propName) \
+{	\
+	for (int i = 0; i < _lenIndex; i++)	\
+	{	\
+		if (_index[i] == propName)	\
+			return i;	\
+	}	\
+	return -1;	\
+}	\
+magicVar GetAttr(const char* propName) {	\
+	int index = this->FindAttrIndex(propName);	\
+	magicVar mv;	\
+	switch (index)	\
+	{	\
+		BOOST_PP_SEQ_FOR_EACH_I(REFLECT_EACH_GEN_GET, data, BOOST_PP_VARIADIC_TO_SEQ(__VA_ARGS__)) \
+	}	\
+	return mv; \
+}	\
+
+//Auto Gen
+//template<class T>
+//void SetAttr(const char* propName, T var) {
+//	int index = this->FindAttrIndex(propName);
+//	switch (index)
+//	{
+//	case _index4mProp0:
+//		this->_name4mProp0 = var;
+//		break;
+//	}
+//}
+
+#define REFLECT_EACH_GEN_GET(r, data, i, x) \
+case i:	\
+	mv = Transform(this->STRIP(x));\
+	break;\
 
 #define REFLECT_EACH(r, data, i, x) \
-PAIR(x); \
-template<class Self> \
-struct field_data<i, Self> \
-{ \
-    Self & self; \
-    field_data(Self & self) : self(self) {} \
-    \
-    typename make_const<Self, TYPEOF(x)>::type & get() \
-    { \
-        return self.STRIP(x); \
-    }\
-    typename boost::add_const<TYPEOF(x)>::type & get() const \
-    { \
-        return self.STRIP(x); \
-    }\
-    const char * name() const \
-    {\
-        return BOOST_PP_STRINGIZE(STRIP(x)); \
-    } \
-}; \
-
-
-struct reflector
-{
-	//Get field_data at index N
-	template<int N, class T>
-	static typename T::template field_data<N, T> get_field_data(T& x)
-	{
-		return typename T::template field_data<N, T>(x);
-	}
-
-	// Get the number of fields
-	template<class T>
-	struct fields
-	{
-		static const int n = T::fields_n;
-	};
-};
-
-struct field_visitor
-{
-	template<class C, class Visitor, class I>
-	void operator()(C& c, Visitor v, I)
-	{
-		v(reflector::get_field_data<I::value>(c));
-	}
-};
-
-
-template<class C, class Visitor>
-void visit_each(C & c, Visitor v)
-{
-	typedef boost::mpl::range_c<int, 0, reflector::fields<C>::n> range;
-	boost::mpl::for_each<range>(boost::bind<void>(field_visitor(), boost::ref(c), v, _1));
-}
-
-/* 
-struct Person
-{
-	Person(const char *name, int age)
-		:
-		name(name),
-		age(age)
-	{
-	}
-private:
-	REFLECTABLE
-		(
-			(const char *)name,
-			(int)age
-			)
-};
-*/
-
-struct print_visitor
-{
-	template<class FieldData>
-	void operator()(FieldData f)
-	{
-		std::cout << f.name() << "=" << f.get() << std::endl;
-	}
-};
-
-template<class T>
-void print_fields(T & x)
-{
-	visit_each(x, print_visitor());
-}
+PAIR(x);
 
 template<class T>
 struct MagicTypeIndex {};
@@ -219,18 +123,37 @@ struct magicVar{
 	} type;
 };
 
+template <class T>
+magicVar Transform(const T var)
+{
+	return magicVar();
+};
+
+template <>
+magicVar Transform<std::string>(std::string var)
+{
+	magicVar mv;
+	mv.type = mv.string_;
+	mv.value.stringV = new std::string(var);
+	return mv;
+}
+
 void printVar(magicVar var)
 {
 	switch (var.type)
 	{
 	case magicVar::int_:
 		std::cout << var.value.intV << std::endl;
+		break;
 	case magicVar::float_:
 		std::cout << var.value.floatV << std::endl;
+		break;
 	case magicVar::double_:
 		std::cout << var.value.doubleV << std::endl;
+		break;
 	case magicVar::string_:
-		std::cout << var.value.stringV << std::endl;
+		std::cout << *var.value.stringV << std::endl;
+		break;
 	default:
 		std::cout << "Error!" << std::endl;
 		break;
@@ -262,38 +185,6 @@ public:
 		}
 		return -1;
 	}
-
-	template<class Self, int, class T1>
-	struct _GetAttr
-	{
-		T1 operator()(){}
-	};
-
-	template <class T>
-	magicVar Transform(const T var) 
-	{
-		return magicVar();
-	};
-
-	template <>
-	magicVar Transform<const char*>(const char* var)
-	{
-		magicVar mv;
-		mv.type = mv.string_;
-		mv.value.stringV = new std::string(var);
-		return mv;
-	}
-
-
-	template<class Self>
-	struct _GetAttr<Self,_index4mProp0, _type4mProp0>
-	{
-		_GetAttr(Self * const self):self(self){}
-		Self * const self;
-		_type4mProp0 operator()() {
-			return self->_name4mProp0;
-		}
-	};
 
 	//Auto Gen
 	magicVar GetAttr(const char* propName) {
@@ -343,7 +234,7 @@ int main() {
 	//Person p("Tom", 82);
 	//print_fields(p);
 	auto obj = new TestObj("stringProp", 110);
-	std::cout << obj->mProp0;;//*obj->GetAttr("mProp0").value.stringV;
+	printVar(obj->GetAttr("mProp0"));
 	//obj->SetAttr("mProp1", 1);
 	//std::count << obj->GetAttr("mProp1") << std::endl;
 	//std::cout << boost::hash_value("mProp1") << std::endl;
