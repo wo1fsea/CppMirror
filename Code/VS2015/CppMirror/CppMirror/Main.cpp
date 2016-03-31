@@ -47,27 +47,28 @@ struct make_const<const M, T>
 };
 
 #define REFLECT(x)	\
-static std::map<std::string, int> * x::_attrIndex = nullptr;
+std::map<std::string, int> * x::_attrIndex = nullptr; \
+bool x::_attrIndexInit = false;	
 
 #define REFLECTABLE(...) \
 static const int _lenIndex = BOOST_PP_VARIADIC_SIZE(__VA_ARGS__); \
-friend struct reflector; \
-template<int N, class Self> \
-struct field_data {}; \
-BOOST_PP_SEQ_FOR_EACH_I(REFLECT_EACH, data, BOOST_PP_VARIADIC_TO_SEQ(__VA_ARGS__))	\
-static const char* const _index[]; \
 static std::map<std::string, int> * _attrIndex; \
+static bool _attrIndexInit;	\
 static void GenAttrIndex(){	\
+	_attrIndex = new std::map<std::string, int>(); \
+	BOOST_PP_SEQ_FOR_EACH_I(REFLECT_EACH_GEN_GEN, data, BOOST_PP_VARIADIC_TO_SEQ(__VA_ARGS__)) \
+	_attrIndexInit = true; \
 	return; \
 }	\
 int SelAttr(const char* propName) \
 {	\
-	for (int i = 0; i < _lenIndex; i++)	\
-	{	\
-		if (_index[i] == propName)	\
-			return i;	\
-	}	\
-	return -1;	\
+	if(_attrIndexInit == false) \
+		this->GenAttrIndex(); \
+	std::map<std::string, int>::iterator it = _attrIndex->find(propName); \
+	if (it != _attrIndex->end()) \
+		return (*_attrIndex)[propName]; \
+	else \
+		return -1;	\
 }	\
 magicVar GetAttr(const char* propName) {	\
 	int index = this->SelAttr(propName);	\
@@ -86,6 +87,9 @@ void SetAttr(const char* propName, T var) {	\
 		BOOST_PP_SEQ_FOR_EACH_I(REFLECT_EACH_GEN_SET, data, BOOST_PP_VARIADIC_TO_SEQ(__VA_ARGS__)) \
 	}\
 }
+
+#define REFLECT_EACH_GEN_GEN(r, data, i, x) \
+(*_attrIndex)[BOOST_PP_STRINGIZE(STRIP(x))] = i;
 
 #define REFLECT_EACH_GEN_GET(r, data, i, x) \
 case i:	\
@@ -180,13 +184,14 @@ void printVar(magicVar var)
 
 class TestObj {
 public:
+	std::string mProp0;
+	int mProp1;
+	TestObj(const char* prop0, int prop1) :mProp0(prop0), mProp1(prop1){}
+public:
 	REFLECTABLE(
 		(std::string) mProp0,
-		(int) mProp1
-	)
-
-	TestObj(const char* prop0, int prop1) :mProp0(prop0), mProp1(prop1){}
-
+		(int)mProp1
+		)
 };
 
 REFLECT(TestObj)
