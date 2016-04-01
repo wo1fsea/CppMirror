@@ -48,9 +48,11 @@ struct make_const<const M, T>
 
 #define REFLECT(x)	\
 std::map<std::string, int> * x::_attrIndex = nullptr; \
-bool x::_attrIndexInit = false;	
+bool x::_attrIndexInit = false;	\
+std::map<std::string, int> * x::_methodIndex = nullptr; \
+bool x::_methodIndexInit = false; \	
 
-#define REFLECTABLE(...) \
+#define REFLECT_PROP(...) \
 static const int _lenIndex = BOOST_PP_VARIADIC_SIZE(__VA_ARGS__); \
 static std::map<std::string, int> * _attrIndex; \
 static bool _attrIndexInit;	\
@@ -103,3 +105,29 @@ case i:	\
 
 #define REFLECT_EACH(r, data, i, x) \
 PAIR(x);
+
+
+#define TYPEOF_FUN(x)
+
+#define REFLECT_FUN(...) \
+static const int _lenIndexFun = BOOST_PP_VARIADIC_SIZE(__VA_ARGS__); \
+static std::map<std::string, int> * _methodIndex; \
+static bool _methodIndexInit;	\
+static void GenMethodIndex() {	\
+		_methodIndex = new std::map<std::string, int>(); \
+		BOOST_PP_SEQ_FOR_EACH_I(REFLECT_EACH_GEN_METHOD_GEN, data, BOOST_PP_VARIADIC_TO_SEQ(__VA_ARGS__)) \
+		_methodIndexInit = true; \
+		return; \
+}	\
+int SelMethod(std::string methodName){ \	
+	if (_methodIndexInit == false) \
+		this->GenMethodIndex(); \
+	std::map<std::string, int>::iterator it = _methodIndex->find(methodName); \
+	if (it != _methodIndex->end()) \
+		return (*_methodIndex)[propName]; \
+	else \
+		return -1; \
+}	
+
+#define REFLECT_EACH_GEN_METHOD_GEN(r, data, i, x) \
+//(*_methodIndex)[BOOST_PP_STRINGIZE(TYPEOF(STRIP(x)))] = i;
