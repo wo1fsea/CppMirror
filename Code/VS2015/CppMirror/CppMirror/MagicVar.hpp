@@ -57,6 +57,20 @@ magicVar Transform<int>(int var)
 	return mv;
 }
 
+template <class T>
+struct TransformHelper {
+	static T Transform(magicVar var) {
+		return 0;
+	}
+};
+
+template <>
+struct TransformHelper<int>{
+	static int Transform(magicVar var) {
+		return var.int_;
+	}
+};
+
 void printVar(magicVar var)
 {
 	switch (var.type)

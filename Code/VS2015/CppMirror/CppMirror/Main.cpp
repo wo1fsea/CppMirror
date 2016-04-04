@@ -13,11 +13,13 @@ public:
 		};
 	}
 
-	void fun0(int i, int j) {
-		std::cout << i << "," << j << std::endl;
+	int fun0() {
+		//std::cout << i << "," << j << std::endl;
+		return 1;
 	}
-	void fun1(std::string str) {
+	int fun1(std::string str) {
 		std::cout << str << std::endl;
+		return 1;
 	}
 
 
@@ -66,8 +68,14 @@ int main() {
 	//std::count << obj->GetAttr("mProp1") << std::endl;
 	//std::cout << boost::hash_value("mProp1") << std::endl;
 	boost::hash<const char*> func;
-	std::cout << obj->GenMethodIndex("fun1")<< std::endl;
-	obj->a(1);
+	std::vector<magicVar> args;
+	magicVar mv;
+	mv.value.intV = 100;
+	mv.type = magicVar::int_;
+	args.push_back(mv);
+	printVar(obj->CallMethod("fun0", args));
+	for (auto i = TestObj::_methodIndex->begin(); i != TestObj::_methodIndex->end(); i++)
+		std::cout << i->first << std::endl;
 	return 0;
 
 }

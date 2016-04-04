@@ -1,7 +1,4 @@
-#include <boost/preprocessor/stringize.hpp>
-#include <boost/preprocessor/variadic/size.hpp>
-#include <boost/preprocessor/seq/for_each_i.hpp>
-#include <boost/preprocessor/variadic/to_seq.hpp>
+#include <boost/preprocessor.hpp>
 #include <boost/type_traits.hpp>
 #include <boost/mpl/range_c.hpp>
 #include <boost/mpl/for_each.hpp>
@@ -16,6 +13,7 @@
 #include <cstddef>
 
 #include <map>
+#include <vector>
 
 #define REM(...) __VA_ARGS__
 #define EAT(...)
@@ -50,7 +48,7 @@ struct make_const<const M, T>
 std::map<std::string, int> * x::_attrIndex = nullptr; \
 bool x::_attrIndexInit = false;	\
 std::map<std::string, int> * x::_methodIndex = nullptr; \
-bool x::_methodIndexInit = false; \	
+bool x::_methodIndexInit = false; 
 
 #define REFLECT_PROP(...) \
 static const int _lenIndex = BOOST_PP_VARIADIC_SIZE(__VA_ARGS__); \
@@ -119,15 +117,51 @@ static void GenMethodIndex() {	\
 		_methodIndexInit = true; \
 		return; \
 }	\
-int SelMethod(std::string methodName){ \	
-	if (_methodIndexInit == false) \
+int SelMethod(std::string methodName)	\
+{	\
+	if(_methodIndexInit == false) \
 		this->GenMethodIndex(); \
 	std::map<std::string, int>::iterator it = _methodIndex->find(methodName); \
-	if (it != _methodIndex->end()) \
-		return (*_methodIndex)[propName]; \
+	if(it != _methodIndex->end()) \
+	return (*_methodIndex)[methodName]; \
 	else \
 		return -1; \
-}	
+}	\
+magicVar CallMethod(std::string methodName, std::vector<magicVar> args)	\
+{	\
+	int index = this->SelMethod(methodName);	\
+	magicVar mv;	\
+	switch (index)	\
+	{	\
+		BOOST_PP_SEQ_FOR_EACH_I(REFLECT_EACH_GEN_METHOD_CALL, data, BOOST_PP_VARIADIC_TO_SEQ(__VA_ARGS__)) \
+	}	\
+	return mv; \
+}
+
+#define STRING(x) \
+BOOST_PP_STRINGIZE(x)
+
+#define METHOD_NAME(x)	\
+TYPEOF(STRIP(x))
+
+#define ARGS(x)	\
+STRIP(STRIP(x))
 
 #define REFLECT_EACH_GEN_METHOD_GEN(r, data, i, x) \
-//(*_methodIndex)[BOOST_PP_STRINGIZE(TYPEOF(STRIP(x)))] = i;
+(*_methodIndex)[STRING(METHOD_NAME(x))] = i;
+
+#define REFLECT_EACH_GEN_METHOD_CALL(r, data, i, x) \
+case i:	\
+	mv = Transform<int>(this->METHOD_NAME(x)(); \
+break;
+
+//	mv = Transform<int>(this->METHOD_NAME(x)(GEN_METHOD_CALL_HELPER1(ARGS(x)))); \
+
+#define GEN_METHOD_CALL_HELPER0(tuple) GEN_METHOD_CALL_HELPER1 tuple 
+#define GEN_METHOD_CALL_HELPER(...) GEN_METHOD_CALL_HELPER0((__VA_ARGS__))
+
+#define GEN_METHOD_CALL_HELPER1(...)	\
+BOOST_PP_SEQ_FOR_EACH_I(REFLECT_EACH_GEN_ARGS, data, BOOST_PP_VARIADIC_TO_SEQ(__VA_ARGS__))
+
+#define REFLECT_EACH_GEN_ARGS(r, data, i, x)	\
+BOOST_PP_IF(i, , , )TransformHelper<TYPEOF(x)>::Transform(args[i])
