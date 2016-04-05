@@ -60,6 +60,8 @@ public:
 
 REFLECT(TestObj)
 
+
+
 int main() {
 	auto obj = new TestObj("stringProp", 110);
 	obj->SetAttr("mProp1", 100);
@@ -76,6 +78,7 @@ int main() {
 	printVar(obj->CallMethod("fun0", args));
 	for (auto i = TestObj::_methodIndex->begin(); i != TestObj::_methodIndex->end(); i++)
 		std::cout << i->first << std::endl;
+	std::cout << BOOST_PP_STRINGIZE(BOOST_PP_VARIADIC_TO_LIST(a, b, c, d));
 	return 0;
 
 }

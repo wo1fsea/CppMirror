@@ -152,16 +152,13 @@ STRIP(STRIP(x))
 
 #define REFLECT_EACH_GEN_METHOD_CALL(r, data, i, x) \
 case i:	\
-	mv = Transform<int>(this->METHOD_NAME(x)(); \
+	mv = Transform<int>(this->METHOD_NAME(x)(GEN_METHOD_CALL_HELPER(ARGS(x)))); \
 break;
 
-//	mv = Transform<int>(this->METHOD_NAME(x)(GEN_METHOD_CALL_HELPER1(ARGS(x)))); \
+#define GEN_METHOD_CALL_HELPER(...)	\
+BOOST_PP_VARIADIC_TO_LIST(__VA_ARGS__)
 
-#define GEN_METHOD_CALL_HELPER0(tuple) GEN_METHOD_CALL_HELPER1 tuple 
-#define GEN_METHOD_CALL_HELPER(...) GEN_METHOD_CALL_HELPER0((__VA_ARGS__))
-
-#define GEN_METHOD_CALL_HELPER1(...)	\
-BOOST_PP_SEQ_FOR_EACH_I(REFLECT_EACH_GEN_ARGS, data, BOOST_PP_VARIADIC_TO_SEQ(__VA_ARGS__))
+//BOOST_PP_LIST_FOR_EACH_I(REFLECT_EACH_GEN_ARGS, data, BOOST_PP_VARIADIC_TO_LIST(__VA_ARGS__))
 
 #define REFLECT_EACH_GEN_ARGS(r, data, i, x)	\
-BOOST_PP_IF(i, , , )TransformHelper<TYPEOF(x)>::Transform(args[i])
+BOOST_PP_COMMA_IF(i) TransformHelper<TYPEOF(x)>::Transform(args[i])
