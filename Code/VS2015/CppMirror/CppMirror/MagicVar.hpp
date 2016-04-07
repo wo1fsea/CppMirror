@@ -67,7 +67,7 @@ struct TransformHelper {
 template <>
 struct TransformHelper<int>{
 	static int Transform(magicVar var) {
-		return var.int_;
+		return var.value.intV;
 	}
 };
 

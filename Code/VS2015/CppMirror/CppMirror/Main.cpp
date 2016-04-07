@@ -13,8 +13,8 @@ public:
 		};
 	}
 
-	int fun0() {
-		//std::cout << i << "," << j << std::endl;
+	int fun0(int i, int j) {
+		std::cout << i << "," << j << std::endl;
 		return 1;
 	}
 	int fun1(std::string str) {
@@ -74,6 +74,7 @@ int main() {
 	magicVar mv;
 	mv.value.intV = 100;
 	mv.type = magicVar::int_;
+	args.push_back(mv);
 	args.push_back(mv);
 	printVar(obj->CallMethod("fun0", args));
 	for (auto i = TestObj::_methodIndex->begin(); i != TestObj::_methodIndex->end(); i++)
