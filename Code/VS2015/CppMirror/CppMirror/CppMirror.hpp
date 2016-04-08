@@ -70,9 +70,9 @@ int SelAttr(const char* propName) \
 	else \
 		return -1;	\
 }	\
-magicVar GetAttr(const char* propName) {	\
+Bottle GetAttr(const char* propName) {	\
 	int index = this->SelAttr(propName);	\
-	magicVar mv;	\
+	Bottle mv;	\
 	switch (index)	\
 	{	\
 		BOOST_PP_SEQ_FOR_EACH_I(REFLECT_EACH_GEN_GET, data, BOOST_PP_VARIADIC_TO_SEQ(__VA_ARGS__)) \
@@ -93,7 +93,7 @@ void SetAttr(const char* propName, T var) {	\
 
 #define REFLECT_EACH_GEN_GET(r, data, i, x) \
 case i:	\
-	mv = Transform(this->STRIP(x));\
+	mv = BottleUp(this->STRIP(x));\
 	break;\
 
 #define REFLECT_EACH_GEN_SET(r, data, i, x) \
@@ -127,10 +127,10 @@ int SelMethod(std::string methodName)	\
 	else \
 		return -1; \
 }	\
-magicVar CallMethod(std::string methodName, std::vector<magicVar> args)	\
+Bottle CallMethod(std::string methodName, std::vector<Bottle> args)	\
 {	\
 	int index = this->SelMethod(methodName);	\
-	magicVar mv;	\
+	Bottle mv;	\
 	switch (index)	\
 	{	\
 		BOOST_PP_SEQ_FOR_EACH_I(REFLECT_EACH_GEN_METHOD_CALL, data, BOOST_PP_VARIADIC_TO_SEQ(__VA_ARGS__)) \
@@ -152,7 +152,7 @@ STRIP(STRIP(x))
 
 #define REFLECT_EACH_GEN_METHOD_CALL(r, data, i, x) \
 case i:	\
-	mv = Transform<int>(this->METHOD_NAME(x)(GEN_METHOD_CALL_HELPER(G1(ARGS(x))))); \
+	mv = BottleUp<int>(this->METHOD_NAME(x)(GEN_METHOD_CALL_HELPER(G1(ARGS(x))))); \
 break;
 
 #define GEN_METHOD_CALL_HELPER(...)	\
@@ -164,4 +164,4 @@ REM x
 //BOOST_PP_LIST_FOR_EACH_I(REFLECT_EACH_GEN_ARGS, data, BOOST_PP_VARIADIC_TO_LIST(__VA_ARGS__))
 
 #define REFLECT_EACH_GEN_ARGS(r, data, i, x)	\
-BOOST_PP_COMMA_IF(i) TransformHelper<TYPEOF(x)>::Transform(args[i])
+BOOST_PP_COMMA_IF(i) Funnel<TYPEOF(x)>::Pour(args[i])

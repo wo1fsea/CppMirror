@@ -1,5 +1,5 @@
 #include "CppMirror.hpp"
-#include "MagicVar.hpp"
+#include "Bottle.hpp"
 
 #include <list>
 
@@ -23,10 +23,10 @@ public:
 	}
 
 
-	magicVar Call(std::string funcName, std::list<magicVar> args)
+	Bottle Call(std::string funcName, std::list<Bottle> args)
 	{
 		//int index = this->SelMethod(funcName);
-		//magicVar result;
+		//Bottle result;
 		//switch (index)
 		//{
 		//case 1:
@@ -43,7 +43,7 @@ public:
 		//	}
 		//	break;
 		//}
-		return magicVar();
+		return Bottle();
 	}
 
 public:
@@ -70,10 +70,10 @@ int main() {
 	//std::count << obj->GetAttr("mProp1") << std::endl;
 	//std::cout << boost::hash_value("mProp1") << std::endl;
 	boost::hash<const char*> func;
-	std::vector<magicVar> args;
-	magicVar mv;
+	std::vector<Bottle> args;
+	Bottle mv;
 	mv.value.intV = 100;
-	mv.type = magicVar::int_;
+	mv.label = Bottle::label_int;
 	args.push_back(mv);
 	args.push_back(mv);
 	printVar(obj->CallMethod("fun0", args));

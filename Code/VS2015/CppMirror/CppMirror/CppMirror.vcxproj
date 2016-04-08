@@ -120,7 +120,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="CppMirror.hpp" />
-    <ClInclude Include="MagicVar.hpp" />
+    <ClInclude Include="Bottle.hpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

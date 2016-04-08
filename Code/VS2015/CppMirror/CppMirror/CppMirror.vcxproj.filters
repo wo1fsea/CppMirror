@@ -23,7 +23,7 @@
     <ClInclude Include="CppMirror.hpp">
       <Filter>Source Files</Filter>
     </ClInclude>
-    <ClInclude Include="MagicVar.hpp">
+    <ClInclude Include="Bottle.hpp">
       <Filter>Source Files</Filter>
     </ClInclude>
   </ItemGroup>
