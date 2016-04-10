@@ -22,30 +22,6 @@ public:
 		return 1;
 	}
 
-
-	Bottle Call(std::string funcName, std::list<Bottle> args)
-	{
-		//int index = this->SelMethod(funcName);
-		//Bottle result;
-		//switch (index)
-		//{
-		//case 1:
-		//	int argsNum = 10;
-		//	if (args.size() != argsNum)
-		//	{
-		//		//error
-		//		
-		//	}
-		//	try {
-		//		result = this->fun0(args[0].intV, )
-		//	}catch (int i) {
-		//		//error
-		//	}
-		//	break;
-		//}
-		return Bottle();
-	}
-
 public:
 	REFLECT_PROP(
 		(int) mProp0,
@@ -71,11 +47,8 @@ int main() {
 	//std::cout << boost::hash_value("mProp1") << std::endl;
 	boost::hash<const char*> func;
 	std::vector<Bottle> args;
-	Bottle mv;
-	mv.value.intV = 100;
-	mv.label = Bottle::label_int;
-	args.push_back(mv);
-	args.push_back(mv);
+	args.push_back(BottleUp(1));
+	args.push_back(BottleUp(2));
 	std::cout << obj->CallMethod("fun0", args);
 	for (auto i = TestObj::_methodIndex->begin(); i != TestObj::_methodIndex->end(); i++)
 		std::cout << i->first << std::endl;

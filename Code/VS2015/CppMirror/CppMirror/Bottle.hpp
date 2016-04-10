@@ -38,18 +38,18 @@ struct BottleLabel<x> \
 template <> \
 Bottle BottleUp<x>(x var) \
 { \
-	Bottle mv; \
-	mv.label = mv.label_##x; \
-	mv.value.x##V = var; \
-	return mv; \
+	Bottle bottle; \
+	bottle.label = bottle.label_##x; \
+	bottle.value.x##V = var; \
+	return bottle; \
 } \
 
 
 #define MAKE_FUNNEL(x, i)	\
 template <>	\
 struct Funnel<x> {	\
-	static x Pour(Bottle var) {	\
-		return var.value.x##V;	\
+	static x Pour(Bottle bottle) {	\
+		return bottle.value.x##V;	\
 	}	\
 };	\
 
@@ -74,12 +74,10 @@ label_##x = BottleLabel<x>::label,
 struct Bottle {
 	union {
 		BOOST_PP_SEQ_FOR_EACH_I(MAKE1_EACH, data, BOOST_PP_VARIADIC_TO_SEQ BOTTLED_TYPE)
-		//MAKE1(int)
 	} value;
 
 	enum
 	{
-		//MAKE2(int)
 		BOOST_PP_SEQ_FOR_EACH_I(MAKE2_EACH, data, BOOST_PP_VARIADIC_TO_SEQ BOTTLED_TYPE)
 	} label;
 };
@@ -99,8 +97,6 @@ MAKE_BOTTLE_UP(x, i)
 
 BOOST_PP_SEQ_FOR_EACH_I(MAKE_FUNNEL_EACH, data, BOOST_PP_VARIADIC_TO_SEQ BOTTLED_TYPE)
 
-//MAKE_FUNNEL(int ,0)
-//MAKE_BOTTLE_UP(int ,0)
 
 BOOST_PP_SEQ_FOR_EACH_I(MAKE_FUNNEMAKE_BOTTLE_UP_EACH, data, BOOST_PP_VARIADIC_TO_SEQ BOTTLED_TYPE)
 
