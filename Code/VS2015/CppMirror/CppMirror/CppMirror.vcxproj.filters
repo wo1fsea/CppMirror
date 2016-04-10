@@ -26,5 +26,8 @@
     <ClInclude Include="Bottle.hpp">
       <Filter>Source Files</Filter>
     </ClInclude>
+    <ClInclude Include="BottledType.hpp">
+      <Filter>Source Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

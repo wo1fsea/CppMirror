@@ -119,6 +119,7 @@
     <ClCompile Include="Main.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="BottledType.hpp" />
     <ClInclude Include="CppMirror.hpp" />
     <ClInclude Include="Bottle.hpp" />
   </ItemGroup>

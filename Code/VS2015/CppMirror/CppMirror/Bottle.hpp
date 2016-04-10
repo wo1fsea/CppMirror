@@ -1,40 +1,15 @@
-#include <string>
+#include <boost/preprocessor.hpp>
 #include <iostream>
+#include <string>
+
+#include "BottledType.hpp"
 
 template<class T>
 struct BottleLabel {};
 
-#define MAKE_BOTTLE_LABEL(x, i) \
-template <>	\
-struct BottleLabel<x>	\
-{						\
-	static const int label = i;	\
-};
 
-MAKE_BOTTLE_LABEL(int, 0)
-MAKE_BOTTLE_LABEL(float, 1)
-MAKE_BOTTLE_LABEL(double, 2)
-typedef std::string string;
-MAKE_BOTTLE_LABEL(string, 3)
+struct Bottle;
 
-struct Bottle {
-	union {
-		// auto gen
-		int intV;
-		float floatV;
-		double doubleV;
-		std::string* stringV;
-	} value;
-
-	enum 
-	{
-		// auto gen
-		label_int = BottleLabel<int>::label,
-		label_float = BottleLabel<float>::label,
-		label_double = BottleLabel<double>::label,
-		label_string = BottleLabel<std::string>::label,
-	} label;
-};
 
 template <class T>
 Bottle BottleUp(const T var)
@@ -42,15 +17,6 @@ Bottle BottleUp(const T var)
 	return Bottle();
 };
 
-// auto gen
-template <>
-Bottle BottleUp<int>(int var)
-{
-	Bottle mv;
-	mv.label = mv.label_int;
-	mv.value.intV = var;
-	return mv;
-}
 
 template <class T>
 struct Funnel {
@@ -59,32 +25,83 @@ struct Funnel {
 	}
 };
 
-// auto gen
-template <>
-struct Funnel<int>{
-	static int Pour(Bottle var) {
-		return var.value.intV;
-	}
+
+#define MAKE_BOTTLE_LABEL(x, i) \
+template <> \
+struct BottleLabel<x> \
+{ \
+	static const int label = i; \
+}; \
+
+
+#define MAKE_BOTTLE_UP(x, i) \
+template <> \
+Bottle BottleUp<x>(x var) \
+{ \
+	Bottle mv; \
+	mv.label = mv.label_##x; \
+	mv.value.x##V = var; \
+	return mv; \
+} \
+
+
+#define MAKE_FUNNEL(x, i)	\
+template <>	\
+struct Funnel<x> {	\
+	static x Pour(Bottle var) {	\
+		return var.value.x##V;	\
+	}	\
+};	\
+
+#define MAKE_BOTTLE_LABEL_EACH(r, data, i, x) \
+MAKE_BOTTLE_LABEL(x, i)
+
+BOOST_PP_SEQ_FOR_EACH_I(MAKE_BOTTLE_LABEL_EACH, data, BOOST_PP_VARIADIC_TO_SEQ BOTTLED_TYPE)
+//MAKE_BOTTLE_LABEL(int, 0)
+
+#define MAKE1(x) \
+x x##V;
+
+#define MAKE1_EACH(r, data, i, x) \
+MAKE1(x)
+
+#define MAKE2_EACH(r, data, i, x) \
+MAKE2(x)
+
+#define MAKE2(x) \
+label_##x = BottleLabel<x>::label,
+
+struct Bottle {
+	union {
+		BOOST_PP_SEQ_FOR_EACH_I(MAKE1_EACH, data, BOOST_PP_VARIADIC_TO_SEQ BOTTLED_TYPE)
+		//MAKE1(int)
+	} value;
+
+	enum
+	{
+		//MAKE2(int)
+		BOOST_PP_SEQ_FOR_EACH_I(MAKE2_EACH, data, BOOST_PP_VARIADIC_TO_SEQ BOTTLED_TYPE)
+	} label;
 };
 
-void printVar(Bottle var)
+
+std::ostream& operator<<(std::ostream& out, const Bottle& var)
 {
-	switch (var.label)
-	{
-	case Bottle::label_int:
-		std::cout << var.value.intV << std::endl;
-		break;
-	case Bottle::label_float:
-		std::cout << var.value.floatV << std::endl;
-		break;
-	case Bottle::label_double:
-		std::cout << var.value.doubleV << std::endl;
-		break;
-	case Bottle::label_string:
-		std::cout << *var.value.stringV << std::endl;
-		break;
-	default:
-		std::cout << "Error!" << std::endl;
-		break;
-	}
+	out << "ERROR";
+	return out;
 }
+
+#define MAKE_FUNNEL_EACH(r, data, i, x) \
+MAKE_FUNNEL(x, i)
+
+#define MAKE_FUNNEMAKE_BOTTLE_UP_EACH(r, data, i, x) \
+MAKE_BOTTLE_UP(x, i)
+
+BOOST_PP_SEQ_FOR_EACH_I(MAKE_FUNNEL_EACH, data, BOOST_PP_VARIADIC_TO_SEQ BOTTLED_TYPE)
+
+//MAKE_FUNNEL(int ,0)
+//MAKE_BOTTLE_UP(int ,0)
+
+BOOST_PP_SEQ_FOR_EACH_I(MAKE_FUNNEMAKE_BOTTLE_UP_EACH, data, BOOST_PP_VARIADIC_TO_SEQ BOTTLED_TYPE)
+
+

@@ -48,7 +48,7 @@ public:
 
 public:
 	REFLECT_PROP(
-		(std::string) mProp0,
+		(int) mProp0,
 		(int) mProp1
 		)
 	REFLECT_FUN(
@@ -65,7 +65,7 @@ REFLECT(TestObj)
 int main() {
 	auto obj = new TestObj("stringProp", 110);
 	obj->SetAttr("mProp1", 100);
-	printVar(obj->GetAttr("mProp1"));
+	std::cout << obj->GetAttr("mProp1");
 	//obj->SetAttr("mProp1", 1);
 	//std::count << obj->GetAttr("mProp1") << std::endl;
 	//std::cout << boost::hash_value("mProp1") << std::endl;
@@ -76,7 +76,7 @@ int main() {
 	mv.label = Bottle::label_int;
 	args.push_back(mv);
 	args.push_back(mv);
-	printVar(obj->CallMethod("fun0", args));
+	std::cout << obj->CallMethod("fun0", args);
 	for (auto i = TestObj::_methodIndex->begin(); i != TestObj::_methodIndex->end(); i++)
 		std::cout << i->first << std::endl;
 	std::cout << BOOST_PP_STRINGIZE(BOOST_PP_VARIADIC_TO_LIST(a, b, c, d));
