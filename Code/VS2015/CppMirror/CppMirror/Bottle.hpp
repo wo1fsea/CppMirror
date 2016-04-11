@@ -4,11 +4,11 @@
 
 #include "BottledType.hpp"
 
+struct Bottle;
+
+
 template<class T>
 struct BottleLabel {};
-
-
-struct Bottle;
 
 
 template <class T>
@@ -53,51 +53,57 @@ struct Funnel<x> {	\
 	}	\
 };	\
 
-#define MAKE_BOTTLE_LABEL_EACH(r, data, i, x) \
+#define MAKE_BOTTLE_LABEL_FOR_EACH(r, data, i, x) \
 MAKE_BOTTLE_LABEL(x, i)
 
-BOOST_PP_SEQ_FOR_EACH_I(MAKE_BOTTLE_LABEL_EACH, data, BOOST_PP_VARIADIC_TO_SEQ BOTTLED_TYPE)
-//MAKE_BOTTLE_LABEL(int, 0)
+BOOST_PP_SEQ_FOR_EACH_I(MAKE_BOTTLE_LABEL_FOR_EACH, data, BOOST_PP_TUPLE_TO_SEQ(BOTTLED_TYPE))
 
-#define MAKE1(x) \
+#define MAKE_VALUE(x) \
 x x##V;
 
-#define MAKE1_EACH(r, data, i, x) \
-MAKE1(x)
-
-#define MAKE2_EACH(r, data, i, x) \
-MAKE2(x)
-
-#define MAKE2(x) \
+#define MAKE_LABEL(x) \
 label_##x = BottleLabel<x>::label,
+
+#define MAKE_VALUE_FOR_EACH(r, data, i, x) \
+MAKE_VALUE(x)
+
+#define MAKE_LABEL_FOR_EACH(r, data, i, x) \
+MAKE_LABEL(x)
 
 struct Bottle {
 	union {
-		BOOST_PP_SEQ_FOR_EACH_I(MAKE1_EACH, data, BOOST_PP_VARIADIC_TO_SEQ BOTTLED_TYPE)
+		BOOST_PP_SEQ_FOR_EACH_I(MAKE_VALUE_FOR_EACH, data, BOOST_PP_TUPLE_TO_SEQ(BOTTLED_TYPE))
 	} value;
 
 	enum
 	{
-		BOOST_PP_SEQ_FOR_EACH_I(MAKE2_EACH, data, BOOST_PP_VARIADIC_TO_SEQ BOTTLED_TYPE)
+		BOOST_PP_SEQ_FOR_EACH_I(MAKE_LABEL_FOR_EACH, data, BOOST_PP_TUPLE_TO_SEQ(BOTTLED_TYPE))
 	} label;
 };
 
+#define MAKE_STD_COUT_OPERATOR(x) \
+case BottleLabel<x>::label: \
+	std::cout<<bottle.value.x##V; \
+	break; \
 
-std::ostream& operator<<(std::ostream& out, const Bottle& var)
+#define MAKE_STD_COUT_OPERATOR_FOR_EACH(r, data, i, x) \
+MAKE_STD_COUT_OPERATOR(x)
+
+std::ostream& operator<<(std::ostream& out, const Bottle& bottle)
 {
-	out << "ERROR";
+	switch (bottle.label)
+	{
+		BOOST_PP_SEQ_FOR_EACH_I(MAKE_STD_COUT_OPERATOR_FOR_EACH, data, BOOST_PP_TUPLE_TO_SEQ(BOTTLED_TYPE))
+	}
 	return out;
 }
 
-#define MAKE_FUNNEL_EACH(r, data, i, x) \
+#define MAKE_FUNNEL_FOR_EACH(r, data, i, x) \
 MAKE_FUNNEL(x, i)
 
-#define MAKE_FUNNEMAKE_BOTTLE_UP_EACH(r, data, i, x) \
+#define MAKE_FUNNEMAKE_BOTTLE_UP_FOR_EACH(r, data, i, x) \
 MAKE_BOTTLE_UP(x, i)
 
-BOOST_PP_SEQ_FOR_EACH_I(MAKE_FUNNEL_EACH, data, BOOST_PP_VARIADIC_TO_SEQ BOTTLED_TYPE)
+BOOST_PP_SEQ_FOR_EACH_I(MAKE_FUNNEL_FOR_EACH, data, BOOST_PP_TUPLE_TO_SEQ(BOTTLED_TYPE))
 
-
-BOOST_PP_SEQ_FOR_EACH_I(MAKE_FUNNEMAKE_BOTTLE_UP_EACH, data, BOOST_PP_VARIADIC_TO_SEQ BOTTLED_TYPE)
-
-
+BOOST_PP_SEQ_FOR_EACH_I(MAKE_FUNNEMAKE_BOTTLE_UP_FOR_EACH, data, BOOST_PP_TUPLE_TO_SEQ(BOTTLED_TYPE))

@@ -1,16 +1,5 @@
 #include <boost/preprocessor.hpp>
 #include <boost/type_traits.hpp>
-#include <boost/mpl/range_c.hpp>
-#include <boost/mpl/for_each.hpp>
-#include <boost/bind.hpp>
-#include <boost/mpl/string.hpp>  
-#include <boost/functional/hash.hpp>
-#include <iostream>
-
-#include <boost/mpl/string.hpp>
-#include <boost/mpl/fold.hpp>
-#include <boost/mpl/size_t.hpp>
-#include <cstddef>
 
 #include <map>
 #include <vector>
@@ -152,16 +141,11 @@ STRIP(STRIP(x))
 
 #define REFLECT_EACH_GEN_METHOD_CALL(r, data, i, x) \
 case i:	\
-	mv = BottleUp<int>(this->METHOD_NAME(x)(GEN_METHOD_CALL_HELPER(G1(ARGS(x))))); \
+	mv = BottleUp<int>(this->METHOD_NAME(x)(GEN_METHOD_CALL_HELPER(ARGS(x)))); \
 break;
 
 #define GEN_METHOD_CALL_HELPER(...)	\
-BOOST_PP_LIST_FOR_EACH_I(REFLECT_EACH_GEN_ARGS, data, BOOST_PP_VARIADIC_TO_LIST(__VA_ARGS__))
-
-#define G1(x) \
-REM x
-
-//BOOST_PP_LIST_FOR_EACH_I(REFLECT_EACH_GEN_ARGS, data, BOOST_PP_VARIADIC_TO_LIST(__VA_ARGS__))
+BOOST_PP_LIST_FOR_EACH_I(REFLECT_EACH_GEN_ARGS, data, BOOST_PP_TUPLE_TO_LIST(__VA_ARGS__))
 
 #define REFLECT_EACH_GEN_ARGS(r, data, i, x)	\
 BOOST_PP_COMMA_IF(i) Funnel<TYPEOF(x)>::Pour(args[i])

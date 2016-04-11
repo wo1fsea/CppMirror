@@ -17,8 +17,8 @@ public:
 		std::cout << i << "," << j << std::endl;
 		return 1;
 	}
-	int fun1(std::string str) {
-		std::cout << str << std::endl;
+	int fun1(double d) {
+		std::cout << d << std::endl;
 		return 1;
 	}
 
@@ -28,7 +28,8 @@ public:
 		(int) mProp1
 		)
 	REFLECT_FUN(
-		(void)(fun0)((int) i, (int) j)
+		(void)(fun0)((int) i, (int) j),
+		(void)(fun1)((double) d)
 		)
 	typedef void callable(int i);
 	callable *a;
@@ -41,18 +42,17 @@ REFLECT(TestObj)
 int main() {
 	auto obj = new TestObj("stringProp", 110);
 	obj->SetAttr("mProp1", 100);
-	std::cout << obj->GetAttr("mProp1");
-	//obj->SetAttr("mProp1", 1);
-	//std::count << obj->GetAttr("mProp1") << std::endl;
-	//std::cout << boost::hash_value("mProp1") << std::endl;
-	boost::hash<const char*> func;
+	auto re = obj->GetAttr("mProp1");
+	std::cout << re << std::endl;
+
 	std::vector<Bottle> args;
 	args.push_back(BottleUp(1));
 	args.push_back(BottleUp(2));
-	std::cout << obj->CallMethod("fun0", args);
-	for (auto i = TestObj::_methodIndex->begin(); i != TestObj::_methodIndex->end(); i++)
-		std::cout << i->first << std::endl;
-	std::cout << BOOST_PP_STRINGIZE(BOOST_PP_VARIADIC_TO_LIST(a, b, c, d));
+	obj->CallMethod("fun0", args);
+
+	std::vector<Bottle> args0;
+	args0.push_back(BottleUp(1.11111));
+	obj->CallMethod("fun1", args0);
 	return 0;
 
 }
