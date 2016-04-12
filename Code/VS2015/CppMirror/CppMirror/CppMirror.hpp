@@ -82,7 +82,7 @@ void SetAttr(const char* propName, T var) {	\
 
 #define REFLECT_EACH_GEN_GET(r, data, i, x) \
 case i:	\
-	mv = BottleUp(this->STRIP(x));\
+	mv = Bottle(this->STRIP(x));\
 	break;\
 
 #define REFLECT_EACH_GEN_SET(r, data, i, x) \
@@ -141,7 +141,7 @@ STRIP(STRIP(x))
 
 #define REFLECT_EACH_GEN_METHOD_CALL(r, data, i, x) \
 case i:	\
-	mv = BottleUp<int>(this->METHOD_NAME(x)(GEN_METHOD_CALL_HELPER(ARGS(x)))); \
+	mv = Bottle(this->METHOD_NAME(x)(GEN_METHOD_CALL_HELPER(ARGS(x)))); \
 break;
 
 #define GEN_METHOD_CALL_HELPER(...)	\
