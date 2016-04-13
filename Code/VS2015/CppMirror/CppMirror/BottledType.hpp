@@ -6,7 +6,7 @@ typedef unsigned short unsigned_short;
 typedef unsigned long unsigned_long;
 typedef long double long_double;
 
-typedef int* int_ptr;
+typedef std::shared_ptr<int> int_ptr;
 
 #define BOTTLED_TYPE (\
 	bool, \

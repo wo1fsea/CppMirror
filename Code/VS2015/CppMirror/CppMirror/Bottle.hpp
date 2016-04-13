@@ -31,7 +31,7 @@ struct BottleLabel<x> \
 template <>	\
 struct Funnel<x> {	\
 	static x Pour(Bottle bottle) {	\
-		return bottle.value.x##V;	\
+		return *bottle.value.x##V;	\
 	}	\
 };	\
 
@@ -40,21 +40,37 @@ MAKE_BOTTLE_LABEL(x, i)
 
 BOOST_PP_SEQ_FOR_EACH_I(MAKE_BOTTLE_LABEL_FOR_EACH, data, BOOST_PP_TUPLE_TO_SEQ(BOTTLED_TYPE))
 
+#define MAKE_THIS_COPY(x) \
+case label_##x: \
+	this->value.x##V = new x(*bottle.value.x##V); \
+	break;
+
 #define MAKE_CONSTRUCTION(x) \
 template<> \
 Bottle(x value){ \
-	this->value.x##V = value; \
+	this->value.x##V = new x(value); \
 	this->label = label_##x; \
 }
 
+#define MAKE_DESTRUCTION(x) \
+case label_##x: \
+	delete this->value.x##V; \
+	break;
+
 #define MAKE_VALUE(x) \
-x x##V;
+x* x##V;
 
 #define MAKE_LABEL(x) \
 label_##x = BottleLabel<x>::label,
 
+#define MAKE_THIS_COPY_FOR_EACH(r, data, i, x) \
+MAKE_THIS_COPY(x)
+
 #define MAKE_CONSTRUCTION_FOR_EACH(r, data, i, x) \
 MAKE_CONSTRUCTION(x) 
+
+#define MAKE_DESTRUCTION_FOR_EACH(r, data, i, x) \
+MAKE_DESTRUCTION(x) 
 
 #define MAKE_VALUE_FOR_EACH(r, data, i, x) \
 MAKE_VALUE(x)
@@ -64,29 +80,54 @@ MAKE_LABEL(x)
 
 struct Bottle {
 	Bottle(){
-		this->value.voidV = 0;
-		this->label = label_void;
+		this->value.intV = new int(0);
+		this->label = label_int;
 	}
 	template<class T> 
 	Bottle(T value) {}
 
+
+	Bottle(const Bottle& bottle)
+	{
+		this->label = bottle.label;	
+		switch (this->label)
+		{
+			BOOST_PP_SEQ_FOR_EACH_I(MAKE_THIS_COPY_FOR_EACH, data, BOOST_PP_TUPLE_TO_SEQ(BOTTLED_TYPE))
+		}
+	}
+
+	Bottle & operator = (const Bottle& bottle)
+	{
+		this->label = bottle.label;
+		switch (this->label)
+		{
+			BOOST_PP_SEQ_FOR_EACH_I(MAKE_THIS_COPY_FOR_EACH, data, BOOST_PP_TUPLE_TO_SEQ(BOTTLED_TYPE))
+		}
+		return *this;
+	}
+
 	BOOST_PP_SEQ_FOR_EACH_I(MAKE_CONSTRUCTION_FOR_EACH, data, BOOST_PP_TUPLE_TO_SEQ(BOTTLED_TYPE))
+
+	~Bottle() {
+		switch (this->label)
+		{
+			BOOST_PP_SEQ_FOR_EACH_I(MAKE_DESTRUCTION_FOR_EACH, data, BOOST_PP_TUPLE_TO_SEQ(BOTTLED_TYPE))
+		}
+	}
 	
 	union {
-		int voidV;
 		BOOST_PP_SEQ_FOR_EACH_I(MAKE_VALUE_FOR_EACH, data, BOOST_PP_TUPLE_TO_SEQ(BOTTLED_TYPE))
 	} value;
 
 	enum
 	{
-		label_void = -1,
 		BOOST_PP_SEQ_FOR_EACH_I(MAKE_LABEL_FOR_EACH, data, BOOST_PP_TUPLE_TO_SEQ(BOTTLED_TYPE))
 	} label;
 };
 
 #define MAKE_STD_COUT_OPERATOR(x) \
 case BottleLabel<x>::label: \
-	std::cout<<bottle.value.x##V; \
+	std::cout<<*bottle.value.x##V; \
 	break; \
 
 #define MAKE_STD_COUT_OPERATOR_FOR_EACH(r, data, i, x) \

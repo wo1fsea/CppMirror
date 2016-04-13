@@ -49,9 +49,9 @@ int main() {
 	std::vector<Bottle> args0;
 	args0.push_back(Bottle(1.11111));
 
-	auto bi = Bottle(&intV);
+	auto bi = Bottle(int_ptr(new int(66666)));
 
-	std::cout << bi << "," << *Funnel<int*>::Pour(bi) << std::endl;
+	std::cout << bi << "," << *Funnel<int_ptr>::Pour(bi) << std::endl;
 
 	obj->CallMethod("fun1", args0);
 	return 0;
