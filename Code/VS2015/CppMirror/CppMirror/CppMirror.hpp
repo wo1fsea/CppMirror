@@ -70,6 +70,7 @@ Bottle GetAttr(const char* propName) {	\
 }	\
 template<class T>	\
 void SetAttr(const char* propName, T var) {	\
+	Bottle bottle(var);	\
 	int index = this->SelAttr(propName);	\
 	switch (index)	\
 	{	\
@@ -87,7 +88,7 @@ case i:	\
 
 #define REFLECT_EACH_GEN_SET(r, data, i, x) \
 case i:	\
-	this->STRIP(x)=var;\
+	this->STRIP(x) = Funnel<TYPEOF(x)>::Pour(bottle);\
 	break;\
 
 #define REFLECT_EACH(r, data, i, x) \

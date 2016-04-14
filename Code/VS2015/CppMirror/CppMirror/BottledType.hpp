@@ -1,3 +1,4 @@
+#include <string>
 #include <boost/shared_ptr.hpp>
 
 typedef signed char signed_char;
@@ -5,6 +6,8 @@ typedef unsigned char unsigned_char;
 typedef unsigned short unsigned_short;
 typedef unsigned long unsigned_long;
 typedef long double long_double;
+
+typedef std::string string;
 
 typedef std::shared_ptr<int> int_ptr;
 
@@ -18,5 +21,6 @@ typedef std::shared_ptr<int> int_ptr;
 	float, \
 	double, \
 	long_double, \
+	string, \
 	int_ptr \
 )

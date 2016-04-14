@@ -7,7 +7,7 @@ class TestObj {
 public:
 	std::string mProp0;
 	int mProp1;
-	TestObj(const char* prop0, int prop1) :mProp0(prop0), mProp1(prop1){
+	TestObj(std::string prop0, int prop1) :mProp0(prop0), mProp1(prop1){
 	}
 
 	int fun0(int i, int j) {
@@ -21,7 +21,7 @@ public:
 
 public:
 	REFLECT_PROP(
-		(int) mProp0,
+		(std::string) mProp0,
 		(int) mProp1
 		)
 	REFLECT_FUN(
@@ -37,8 +37,9 @@ REFLECT(TestObj)
 int main() {
 	int intV = 100001;
 	auto obj = new TestObj("stringProp", 110);
-	obj->SetAttr("mProp1", 100);
-	auto re = obj->GetAttr("mProp1");
+	std::cout << obj->GetAttr("mProp0");
+	obj->SetAttr("mProp0", string("100"));
+	auto re = obj->GetAttr("mProp0");
 	std::cout << re << std::endl;
 
 	std::vector<Bottle> args;

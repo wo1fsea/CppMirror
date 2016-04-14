@@ -40,7 +40,7 @@ MAKE_BOTTLE_LABEL(x, i)
 
 BOOST_PP_SEQ_FOR_EACH_I(MAKE_BOTTLE_LABEL_FOR_EACH, data, BOOST_PP_TUPLE_TO_SEQ(BOTTLED_TYPE))
 
-#define MAKE_THIS_COPY(x) \
+#define COPY_DATA(x) \
 case label_##x: \
 	this->value.x##V = new x(*bottle.value.x##V); \
 	break;
@@ -52,7 +52,7 @@ Bottle(x value){ \
 	this->label = label_##x; \
 }
 
-#define MAKE_DESTRUCTION(x) \
+#define DELETE_DATA(x) \
 case label_##x: \
 	delete this->value.x##V; \
 	break;
@@ -63,14 +63,14 @@ x* x##V;
 #define MAKE_LABEL(x) \
 label_##x = BottleLabel<x>::label,
 
-#define MAKE_THIS_COPY_FOR_EACH(r, data, i, x) \
-MAKE_THIS_COPY(x)
+#define COPY_DATA_FOR_EACH(r, data, i, x) \
+COPY_DATA(x)
 
 #define MAKE_CONSTRUCTION_FOR_EACH(r, data, i, x) \
 MAKE_CONSTRUCTION(x) 
 
-#define MAKE_DESTRUCTION_FOR_EACH(r, data, i, x) \
-MAKE_DESTRUCTION(x) 
+#define DELETE_DATA_FOR_EACH(r, data, i, x) \
+DELETE_DATA(x) 
 
 #define MAKE_VALUE_FOR_EACH(r, data, i, x) \
 MAKE_VALUE(x)
@@ -92,16 +92,21 @@ struct Bottle {
 		this->label = bottle.label;	
 		switch (this->label)
 		{
-			BOOST_PP_SEQ_FOR_EACH_I(MAKE_THIS_COPY_FOR_EACH, data, BOOST_PP_TUPLE_TO_SEQ(BOTTLED_TYPE))
+			BOOST_PP_SEQ_FOR_EACH_I(COPY_DATA_FOR_EACH, data, BOOST_PP_TUPLE_TO_SEQ(BOTTLED_TYPE))
 		}
 	}
 
 	Bottle & operator = (const Bottle& bottle)
 	{
+		switch (this->label)
+		{
+			BOOST_PP_SEQ_FOR_EACH_I(DELETE_DATA_FOR_EACH, data, BOOST_PP_TUPLE_TO_SEQ(BOTTLED_TYPE))
+		}
+
 		this->label = bottle.label;
 		switch (this->label)
 		{
-			BOOST_PP_SEQ_FOR_EACH_I(MAKE_THIS_COPY_FOR_EACH, data, BOOST_PP_TUPLE_TO_SEQ(BOTTLED_TYPE))
+			BOOST_PP_SEQ_FOR_EACH_I(COPY_DATA_FOR_EACH, data, BOOST_PP_TUPLE_TO_SEQ(BOTTLED_TYPE))
 		}
 		return *this;
 	}
@@ -111,7 +116,7 @@ struct Bottle {
 	~Bottle() {
 		switch (this->label)
 		{
-			BOOST_PP_SEQ_FOR_EACH_I(MAKE_DESTRUCTION_FOR_EACH, data, BOOST_PP_TUPLE_TO_SEQ(BOTTLED_TYPE))
+			BOOST_PP_SEQ_FOR_EACH_I(DELETE_DATA_FOR_EACH, data, BOOST_PP_TUPLE_TO_SEQ(BOTTLED_TYPE))
 		}
 	}
 	
