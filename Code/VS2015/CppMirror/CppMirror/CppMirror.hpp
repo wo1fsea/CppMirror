@@ -4,21 +4,18 @@
 #include <map>
 #include <vector>
 
-#define REM(...) __VA_ARGS__
+#define SPIT(...) __VA_ARGS__
 #define EAT(...)
 
-#define DETAIL_TYPEOF_INT2(tuple) DETAIL_TYPEOF_HEAD tuple 
-#define DETAIL_TYPEOF_INT(...) DETAIL_TYPEOF_INT2((__VA_ARGS__))
+#define EXPAND_FIRST_HELPER1(tuple) SPIT_FIRST tuple
+#define EXPAND_FIRST_HELPER(...) EXPAND_FIRST_HELPER1((__VA_ARGS__))
 
-// Retrieve the type
-#define TYPEOF(x) DETAIL_TYPEOF_INT(DETAIL_TYPEOF_PROBE x,)
-#define DETAIL_TYPEOF(...) DETAIL_TYPEOF_HEAD(__VA_ARGS__)
-#define DETAIL_TYPEOF_HEAD(x, ...) REM x
+#define EXPAND_FIRST(x) EXPAND_FIRST_HELPER(DETAIL_TYPEOF_PROBE x,)
+#define DETAIL_EXPAND_FIRST(...) SPIT_FIRST(__VA_ARGS__)
+#define SPIT_FIRST(x, ...) SPIT x
 #define DETAIL_TYPEOF_PROBE(...) (__VA_ARGS__),
-// Strip off the type
-#define STRIP(x) EAT x
-// Show the type without parenthesis
-#define PAIR(x) REM x
+
+#define REMOVE_FIRST(x) EAT x
 
 // A helper metafunction for adding const to a type
 template<class M, class T>
@@ -79,23 +76,17 @@ void SetAttr(const char* propName, T var) {	\
 }
 
 #define REFLECT_EACH_GEN_GEN(r, data, i, x) \
-(*_attrIndex)[BOOST_PP_STRINGIZE(STRIP(x))] = i;
+(*_attrIndex)[BOOST_PP_STRINGIZE(REMOVE_FIRST(x))] = i;
 
 #define REFLECT_EACH_GEN_GET(r, data, i, x) \
 case i:	\
-	mv = Bottle(this->STRIP(x));\
+	mv = Bottle(this->REMOVE_FIRST(x));\
 	break;\
 
 #define REFLECT_EACH_GEN_SET(r, data, i, x) \
 case i:	\
-	this->STRIP(x) = Funnel<TYPEOF(x)>::Pour(bottle);\
+	this->REMOVE_FIRST(x) = Funnel<EXPAND_FIRST(x)>::Pour(bottle);\
 	break;\
-
-#define REFLECT_EACH(r, data, i, x) \
-PAIR(x);
-
-
-#define TYPEOF_FUN(x)
 
 #define REFLECT_FUN(...) \
 static const int _lenIndexFun = BOOST_PP_VARIADIC_SIZE(__VA_ARGS__); \
@@ -132,10 +123,10 @@ Bottle CallMethod(std::string methodName, std::vector<Bottle> args)	\
 BOOST_PP_STRINGIZE(x)
 
 #define METHOD_NAME(x)	\
-TYPEOF(STRIP(x))
+EXPAND_FIRST(REMOVE_FIRST(x))
 
 #define ARGS(x)	\
-STRIP(STRIP(x))
+REMOVE_FIRST(REMOVE_FIRST(x))
 
 #define REFLECT_EACH_GEN_METHOD_GEN(r, data, i, x) \
 (*_methodIndex)[STRING(METHOD_NAME(x))] = i;
@@ -146,7 +137,7 @@ case i:	\
 break;
 
 #define GEN_METHOD_CALL_HELPER(...)	\
-BOOST_PP_LIST_FOR_EACH_I(REFLECT_EACH_GEN_ARGS, data, BOOST_PP_TUPLE_TO_LIST(__VA_ARGS__))
+BOOST_PP_LIST_FOR_EACH_I(REFLECT_EACH_GEN_ARGS, data, BOOST_PP_VARIADIC_TO_LIST(EXPAND_FIRST(__VA_ARGS__))
 
 #define REFLECT_EACH_GEN_ARGS(r, data, i, x)	\
-BOOST_PP_COMMA_IF(i) Funnel<TYPEOF(x)>::Pour(args[i])
+BOOST_PP_COMMA_IF(i) Funnel<EXPAND_FIRST(x)>::Pour(args[i])
