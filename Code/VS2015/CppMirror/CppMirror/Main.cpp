@@ -14,8 +14,8 @@ public:
 		std::cout << i << "," << j << std::endl;
 		return 1;
 	}
-	int fun1(double d) {
-		std::cout << d << std::endl;
+	int fun1() {
+		std::cout << 1 << std::endl;
 		return 1;
 	}
 
@@ -26,7 +26,7 @@ public:
 		)
 	REFLECT_FUN(
 		(void)(fun0)((int) i, (int) j),
-		(void)(fun1)((double) d)
+		(void)(fun1)()
 		)
 };
 
